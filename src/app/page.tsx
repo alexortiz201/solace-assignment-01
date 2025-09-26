@@ -1,91 +1,94 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { AdvocatesSearchForm } from "./features/AdvocatesSearchForm";
+import { AdvocatesTable, type Advocate } from "./features/AdvocatesTable";
+import { Text, ThemePanel, Box, Container, Heading, Quote, Progress } from "@radix-ui/themes";
 
 export default function Home() {
-  const [advocates, setAdvocates] = useState([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState([]);
+  const [advocates, setAdvocates] = useState<Advocate[]>([]);
+  const [filteredAdvocates, setFilteredAdvocates] = useState<Advocate[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [resultCount, setResultCount] = useState(0);
+  const [status, setStatus] = useState<'pending' | 'error' | 'done'>('pending');
 
   useEffect(() => {
-    console.log("fetching advocates...");
-    fetch("/api/advocates").then((response) => {
-      response.json().then((jsonResponse) => {
-        setAdvocates(jsonResponse.data);
-        setFilteredAdvocates(jsonResponse.data);
-      });
-    });
+    const fetchAdvocates = async () => {
+      console.log("fetching advocates...")
+      const response = await fetch("/api/advocates")
+      const jsonResponse = await response.json()
+
+      setAdvocates(jsonResponse.data)
+      setFilteredAdvocates(jsonResponse.data)
+      setResultCount(jsonResponse.data.length)
+      setStatus('done')
+    }
+
+    fetchAdvocates()
   }, []);
 
-  const onChange = (e) => {
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
 
-    document.getElementById("search-term").innerHTML = searchTerm;
+    setSearchTerm(searchTerm)
 
-    console.log("filtering advocates...");
+    const searchTermLower = searchTerm.toLowerCase()
     const filteredAdvocates = advocates.filter((advocate) => {
       return (
-        advocate.firstName.includes(searchTerm) ||
-        advocate.lastName.includes(searchTerm) ||
-        advocate.city.includes(searchTerm) ||
-        advocate.degree.includes(searchTerm) ||
-        advocate.specialties.includes(searchTerm) ||
-        advocate.yearsOfExperience.includes(searchTerm)
+        (advocate.firstName).toLowerCase().includes(searchTermLower) ||
+        (advocate.lastName).toLowerCase().includes(searchTermLower) ||
+        (advocate.city).toLowerCase().includes(searchTermLower) ||
+        (advocate.degree).toLowerCase().includes(searchTermLower) ||
+        (advocate.specialties).find(s => s.toLowerCase().includes(searchTermLower)) ||
+        String(advocate.yearsOfExperience).includes(searchTerm)
       );
     });
 
     setFilteredAdvocates(filteredAdvocates);
+    setResultCount(filteredAdvocates.length)
   };
 
   const onClick = () => {
-    console.log(advocates);
-    setFilteredAdvocates(advocates);
+    setSearchTerm('')
+    setFilteredAdvocates(advocates)
+    setResultCount(advocates.length)
   };
 
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    console.log({ e, d: formData })
+  }
+
   return (
-    <main style={{ margin: "24px" }}>
-      <h1>Solace Advocates</h1>
-      <br />
-      <br />
-      <div>
-        <p>Search</p>
-        <p>
-          Searching for: <span id="search-term"></span>
-        </p>
-        <input style={{ border: "1px solid black" }} onChange={onChange} />
-        <button onClick={onClick}>Reset Search</button>
-      </div>
-      <br />
-      <br />
-      <table>
-        <thead>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>City</th>
-          <th>Degree</th>
-          <th>Specialties</th>
-          <th>Years of Experience</th>
-          <th>Phone Number</th>
-        </thead>
-        <tbody>
-          {filteredAdvocates.map((advocate) => {
-            return (
-              <tr>
-                <td>{advocate.firstName}</td>
-                <td>{advocate.lastName}</td>
-                <td>{advocate.city}</td>
-                <td>{advocate.degree}</td>
-                <td>
-                  {advocate.specialties.map((s) => (
-                    <div>{s}</div>
-                  ))}
-                </td>
-                <td>{advocate.yearsOfExperience}</td>
-                <td>{advocate.phoneNumber}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </main>
+    <>
+      <Container className="w-full max-w-full" position="fixed" top="0" left="0"><Progress className="w-full max-w-full" radius="none" size="1" duration="2s" /></Container>
+      <Box style={{ background: "var(--gray-a2)", borderRadius: "var(--radius-3)", marginTop: "20px" }}>
+        <Container size="4">
+          {/* <ThemePanel /> */}
+          <Heading className="mb-5" as='h1'>Solace Advocates</Heading>
+          <div className="mb-2">
+            <Text>
+              Searching for: {searchTerm}
+            </Text>
+          </div>
+          <div className="mb-1">
+            <AdvocatesSearchForm
+              onClick={() => onClick()}
+              onChange={onChange}
+              onSubmit={handleSubmit} />
+          </div>
+
+          <div className="mb-1">
+            <Text>
+              {resultCount > 0 && <Quote>Results: {resultCount}</Quote>}
+            </Text>
+          </div>
+
+          { status === 'done' && <AdvocatesTable advocates={filteredAdvocates} /> }
+        </Container>
+      </Box>
+    </>
   );
 }
