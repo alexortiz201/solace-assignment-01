@@ -5,13 +5,14 @@ import { useRef } from "react";
 type AdvocateSearchFormProps = {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onClick: () => void
+  searchTerm?: string
 }
 
-export const AdvocatesSearchForm = ({ onChange, onClick }: AdvocateSearchFormProps) => {
+export const AdvocatesSearchForm = ({ onChange, onClick, searchTerm }: AdvocateSearchFormProps) => {
   const searchInputRef = useRef<HTMLInputElement>(null)
   return (
     <>
-      <TextField.Root ref={searchInputRef} onChange={onChange} placeholder="Search for Advocates…">
+      <TextField.Root ref={searchInputRef} onChange={onChange} placeholder="Search for Advocates…" value={searchTerm}>
         <TextField.Slot>
           <MagnifyingGlassIcon height="16" width="16" />
         </TextField.Slot>

@@ -1,4 +1,4 @@
-import { Table } from '../components/Table'
+import { Table } from '../../components/Table'
 import { Table as RTable } from '@radix-ui/themes'
 
 export type Advocate = {
@@ -9,6 +9,18 @@ export type Advocate = {
   specialties: string[]
   yearsOfExperience: string
   phoneNumber: string // we can use something better need to look typescript string interop
+}
+
+const Specialties = ({ s }: { s: string[] }) => {
+  const specialties = s.map((cur, i) => (
+    <RTable.Row key={cur + i}><RTable.Cell>{cur}</RTable.Cell></RTable.Row>
+  ))
+  return (<RTable.Root>
+    <RTable.Body>
+      { specialties }
+    </RTable.Body>
+  </RTable.Root>
+  )
 }
 
 export const AdvocatesTable = ({ advocates }: { advocates: Advocate[]}) =>
@@ -30,9 +42,7 @@ export const AdvocatesTable = ({ advocates }: { advocates: Advocate[]}) =>
         <RTable.Cell className='border border-slate-700'>{a.city}</RTable.Cell>
         <RTable.Cell className='border border-slate-700'>{a.degree}</RTable.Cell>
         <RTable.Cell className='border border-slate-700'>
-          {a.specialties.map((s, i) => (
-            <RTable.Row key={s + i}><RTable.Cell>{s}</RTable.Cell></RTable.Row>
-          ))}
+          { a.specialties.length && <Specialties s={a.specialties} /> }
         </RTable.Cell>
         <RTable.Cell className='border border-slate-700'>{a.yearsOfExperience}</RTable.Cell>
         <RTable.Cell className='border border-slate-700'>{a.phoneNumber}</RTable.Cell>

@@ -1,69 +1,49 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { AdvocatesSearchForm } from "./features/AdvocatesSearchForm";
-import { AdvocatesTable, type Advocate } from "./features/AdvocatesTable";
+import { useMemo, useState } from "react";
+import { AdvocatesSearchForm } from "./features/Advocates/AdvocatesSearchForm";
+import { AdvocatesTable, type Advocate } from "./features/Advocates/AdvocatesTable";
 import { Text, Box, Container, Heading, Quote, Progress } from "@radix-ui/themes";
+import { useAdvocatesQuery } from './features/Advocates/hooks/useAdvocatesQuery'
+import { useSearchParams } from "next/navigation";
 
 export default function Home() {
-  const [advocates, setAdvocates] = useState<Advocate[]>([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState<Advocate[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [resultCount, setResultCount] = useState(0);
-  const [status, setStatus] = useState<'pending' | 'error' | 'done'>('pending');
+  const searchParams = useSearchParams();
+  const query = searchParams.get('q')
+  const [searchTerm, setSearchTerm] = useState(query ?? '');
+  const { data: advocates = [], status } = useAdvocatesQuery()
+  const filteredAdvocates = useMemo(() => {
+    const searchTermLower = searchTerm.trim().toLowerCase()
+    if (!searchTermLower) return advocates
+    return advocates.filter(advocate =>
+      (advocate.firstName).toLowerCase().includes(searchTermLower) ||
+      (advocate.lastName).toLowerCase().includes(searchTermLower) ||
+      (advocate.city).toLowerCase().includes(searchTermLower) ||
+      (advocate.degree).toLowerCase().includes(searchTermLower) ||
+      (advocate.specialties).some(s => s.toLowerCase().includes(searchTermLower)) ||
+      String(advocate.yearsOfExperience).includes(searchTerm)
+    )
+  }, [advocates, searchTerm])
 
-  useEffect(() => {
-    const fetchAdvocates = async () => {
-      console.log("fetching advocates...")
-      const response = await fetch("/api/advocates")
-      const jsonResponse = await response.json()
+  const onSetSearchTerm = (e?: React.ChangeEvent<HTMLInputElement>) => {
+    let newTerm = e?.target?.value?.trim() || ''
+    const url = new URL(location.href);
 
-      setAdvocates(jsonResponse.data)
-      setFilteredAdvocates(jsonResponse.data)
-      setResultCount(jsonResponse.data.length)
-      setStatus('done')
-    }
+    if (newTerm !== '') url.searchParams.set("q", newTerm)
+    else url.searchParams.delete("q")
 
-    fetchAdvocates()
-  }, []);
-
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const searchTerm = e.target.value;
-
-    setSearchTerm(searchTerm)
-
-    const searchTermLower = searchTerm.toLowerCase()
-    const filteredAdvocates = advocates.filter((advocate) => {
-      return (
-        (advocate.firstName).toLowerCase().includes(searchTermLower) ||
-        (advocate.lastName).toLowerCase().includes(searchTermLower) ||
-        (advocate.city).toLowerCase().includes(searchTermLower) ||
-        (advocate.degree).toLowerCase().includes(searchTermLower) ||
-        (advocate.specialties).find(s => s.toLowerCase().includes(searchTermLower)) ||
-        String(advocate.yearsOfExperience).includes(searchTerm)
-      );
-    });
-
-    setFilteredAdvocates(filteredAdvocates);
-    setResultCount(filteredAdvocates.length)
-  };
-
-  const onClick = () => {
-    setSearchTerm('')
-    setFilteredAdvocates(advocates)
-    setResultCount(advocates.length)
-  };
-
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-
-    console.log({ e, d: formData })
+    setSearchTerm(newTerm)
+    history.pushState({}, '', url)
   }
+  const onChange = onSetSearchTerm
+  const onClick = () => onSetSearchTerm()
+
 
   return (
     <>
-      <Container className="w-full max-w-full" position="fixed" top="0" left="0"><Progress className="w-full max-w-full" radius="none" size="1" duration="2s" /></Container>
+      <Container className="w-full max-w-full" position="fixed" top="0" left="0">
+        <Progress className="w-full max-w-full" radius="none" size="1" duration={status === 'pending' ? '2s' : '0s'} />
+      </Container>
       <Box style={{ background: "var(--gray-a2)", borderRadius: "var(--radius-3)", marginTop: "20px" }}>
         <Container size="4">
           <Heading className="mb-5" as='h1'>Solace Advocates</Heading>
@@ -74,17 +54,18 @@ export default function Home() {
           </div>
           <div className="mb-1">
             <AdvocatesSearchForm
+              searchTerm={searchTerm}
               onClick={() => onClick()}
               onChange={onChange} />
           </div>
 
           <div className="mb-1">
             <Text>
-              {resultCount > 0 && <Quote>Results: {resultCount}</Quote>}
+              {filteredAdvocates.length > 0 && <Quote>Results: {filteredAdvocates.length}</Quote>}
             </Text>
           </div>
 
-          { status === 'done' && <AdvocatesTable advocates={filteredAdvocates} /> }
+          { status === 'success' && <AdvocatesTable advocates={filteredAdvocates} /> }
         </Container>
       </Box>
     </>
