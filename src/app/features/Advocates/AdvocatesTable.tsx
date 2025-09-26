@@ -1,4 +1,4 @@
-import { Table } from '../components/Table'
+import { Table } from '../../components/Table'
 import { Table as RTable } from '@radix-ui/themes'
 
 export type Advocate = {
