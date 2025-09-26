@@ -5,11 +5,11 @@ import { AdvocatesSearchForm } from "./features/Advocates/AdvocatesSearchForm";
 import { AdvocatesTable, type Advocate } from "./features/Advocates/AdvocatesTable";
 import { Text, Box, Container, Heading, Quote, Progress } from "@radix-ui/themes";
 import { useAdvocatesQuery } from './features/Advocates/hooks/useAdvocatesQuery'
+import { useSearchParams } from "next/navigation";
 
 export default function Home() {
-  const urlSearchString = window.location.search;
-  const params = new URLSearchParams(urlSearchString);
-  const query = params.get('q')
+  const searchParams = useSearchParams();
+  const query = searchParams.get('q')
   const [searchTerm, setSearchTerm] = useState(query ?? '');
   const { data: advocates = [], status } = useAdvocatesQuery()
   const filteredAdvocates = useMemo(() => {
@@ -27,13 +27,13 @@ export default function Home() {
 
   const onSetSearchTerm = (e?: React.ChangeEvent<HTMLInputElement>) => {
     let newTerm = e?.target?.value?.trim() || ''
-    const url = new URL(window.location.href);
+    const url = new URL(location.href);
 
     if (newTerm !== '') url.searchParams.set("q", newTerm)
     else url.searchParams.delete("q")
 
     setSearchTerm(newTerm)
-    window.history.pushState({}, '', url)
+    history.pushState({}, '', url)
   }
   const onChange = onSetSearchTerm
   const onClick = () => onSetSearchTerm()
