@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { AdvocatesSearchForm } from "./features/AdvocatesSearchForm";
 import { AdvocatesTable, type Advocate } from "./features/AdvocatesTable";
-import { Text, ThemePanel, Box, Container, Heading, Quote, Progress } from "@radix-ui/themes";
+import { Text, Box, Container, Heading, Quote, Progress } from "@radix-ui/themes";
 
 export default function Home() {
   const [advocates, setAdvocates] = useState<Advocate[]>([]);
@@ -66,7 +66,6 @@ export default function Home() {
       <Container className="w-full max-w-full" position="fixed" top="0" left="0"><Progress className="w-full max-w-full" radius="none" size="1" duration="2s" /></Container>
       <Box style={{ background: "var(--gray-a2)", borderRadius: "var(--radius-3)", marginTop: "20px" }}>
         <Container size="4">
-          {/* <ThemePanel /> */}
           <Heading className="mb-5" as='h1'>Solace Advocates</Heading>
           <div className="mb-2">
             <Text>
@@ -76,8 +75,7 @@ export default function Home() {
           <div className="mb-1">
             <AdvocatesSearchForm
               onClick={() => onClick()}
-              onChange={onChange}
-              onSubmit={handleSubmit} />
+              onChange={onChange} />
           </div>
 
           <div className="mb-1">

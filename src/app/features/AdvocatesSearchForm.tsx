@@ -1,6 +1,6 @@
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { Button, TextField } from "@radix-ui/themes";
-import { useRef, type FormEvent } from "react";
+import { useRef } from "react";
 
 type AdvocateSearchFormProps = {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
